@@ -1,0 +1,6 @@
+hello world
+hello world
+hello world
+copy file frame hdfs to local
+hello world
+put file frame local to hdfs

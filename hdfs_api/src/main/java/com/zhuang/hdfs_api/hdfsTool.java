@@ -2,10 +2,8 @@ package com.zhuang.hdfs_api;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.QuotaUsage;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
 import org.junit.Test;
 
 import java.io.File;
@@ -72,10 +70,10 @@ public class hdfsTool {
         FileSystem fileSystem = FileSystem.get(new URI("hdfs://192.168.91.100:9000"), new Configuration());
 
         //要下载的文件路径及内容
-        FSDataInputStream inputStream = fileSystem.open(new Path("/usr/a.txt"));
+        FSDataInputStream inputStream = fileSystem.open(new Path("/bigfile.txt"));
 
         //要下载到那个位置
-        FileOutputStream outputStream = new FileOutputStream(new File("E:\\base_java\\Hadoop_project\\hdfs_api\\download\\a2.txt"));
+        FileOutputStream outputStream = new FileOutputStream(new File("E:\\base_java\\Hadoop_project\\hdfs_api\\download\\bigfile.txt"));
 
         IOUtils.copy(inputStream, outputStream);
         IOUtils.closeQuietly(inputStream);
@@ -120,5 +118,35 @@ public class hdfsTool {
         FileSystem fileSystem = FileSystem.get(new URI("hdfs://192.168.91.100:9000"), new Configuration());
         QuotaUsage usage = fileSystem.getQuotaUsage(new Path("/test/dir1"));
         System.out.println(usage.getQuota());
+    }
+
+    /*
+     * hdfs小文件的合并
+     * */
+
+    @Test
+    public void merge() throws URISyntaxException, IOException, InterruptedException {
+        //获取FileSystem
+        FileSystem fileSystem = FileSystem.get(new URI("hdfs://192.168.91.100:9000"), new Configuration(),"root");
+
+        //创建输出流
+        FSDataOutputStream outputStream = fileSystem.create(new Path("/bigfile.txt"));
+
+        //获取本地文件系统
+        LocalFileSystem local = FileSystem.getLocal(new Configuration());
+
+        //通过本地文件系统获取一个文件列表为一个集合
+        FileStatus[] fileStatuses = local.listStatus(new Path("file:///E:\\base_java\\Hadoop_project\\hdfs_api\\download"));
+        for (FileStatus fileStatus: fileStatuses) {
+            //获取本地文件下的每一个文件路径
+            FSDataInputStream inputStream = local.open(fileStatus.getPath());
+            //将每一个文件路径下的文件复制到输出流
+            IOUtils.copy(inputStream,outputStream);
+            //关闭流
+            IOUtils.closeQuietly(inputStream);
+        }
+        IOUtils.closeQuietly(outputStream);
+        local.close();
+        fileSystem.close();
     }
 }
