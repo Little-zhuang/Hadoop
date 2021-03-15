@@ -1,0 +1,1 @@
+put file frame local to hdfs

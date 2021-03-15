@@ -1,0 +1,1 @@
+copy file frame hdfs to local
